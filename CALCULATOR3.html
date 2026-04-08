@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sourav's Ultimate Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08081a;
+            --calc-bg: rgba(255, 255, 255, 0.05);
+            --text: #ffffff;
+            --neon: #00f2fe;
+            --accent: #ff00ff;
+            --btn-bg: rgba(255, 255, 255, 0.08);
+            --display-bg: rgba(0, 0, 0, 0.4);
+        }
+
+        .light-mode {
+            --bg: #e0e5ec;
+            --calc-bg: rgba(255, 255, 255, 0.8);
+            --text: #2d3436;
+            --neon: #4834d4;
+            --accent: #eb4d4b;
+            --btn-bg: rgba(255, 255, 255, 1);
+            --display-bg: #ffffff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        body {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background: var(--bg); overflow: hidden;
+        }
+
+        /* --- Theme Toggle Button --- */
+        .theme-toggle {
+            position: absolute; top: 20px; right: 20px;
+            background: var(--btn-bg); border: 2px solid var(--neon); color: var(--neon);
+            padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 600;
+            box-shadow: 0 0 10px var(--neon); z-index: 100;
+        }
+
+        .calculator {
+            width: 400px; padding: 30px; border-radius: 40px;
+            background: var(--calc-bg); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 50px 100px rgba(0, 0, 0, 0.4);
+        }
+
+        /* --- Header Title --- */
+        .calc-header {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon);
+            font-size: 1.5rem;
+            letter-spacing: 6px;
+            margin-bottom: 25px;
+            text-align: center;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--neon);
+        }
+
+        /* --- Display Unit --- */
+        .display-container {
+            background: var(--display-bg); border-radius: 20px; padding: 25px;
+            margin-bottom: 30px; border: 2px solid var(--neon);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+            overflow: hidden; display: flex; align-items: center;
+        }
+
+        #display {
+            width: 100%; background: transparent; border: none; color: var(--text);
+            font-size: 2.8rem; text-align: right; font-family: 'Orbitron', sans-serif;
+            outline: none; overflow-x: auto; white-space: nowrap;
+        }
+
+        #display::-webkit-scrollbar { height: 3px; }
+        #display::-webkit-scrollbar-thumb { background: var(--neon); }
+
+        /* --- Buttons Grid --- */
+        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+
+        button {
+            height: 70px; border-radius: 18px; border: none;
+            background: var(--btn-bg); color: var(--text);
+            font-size: 1.5rem; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            transform: translateY(-5px);
+            background: var(--neon); color: #fff;
+            box-shadow: 0 10px 20px var(--neon);
+        }
+
+        button:active { transform: scale(0.9); }
+
+        .btn-ac { color: #ff5252; }
+        .btn-op { color: var(--accent); }
+        .btn-eq {
+            grid-column: span 2; background: linear-gradient(45deg, var(--neon), var(--accent));
+            color: #fff; font-size: 2rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <button class="theme-toggle" onclick="toggleTheme()">🌓 THEME</button>
+
+    <div class="calculator">
+        <div class="calc-header">CALCULATOR</div>
+        
+        <div class="display-container">
+            <input type="text" id="display" readonly value="0">
+        </div>
+        
+        <div class="btn-grid">
+            <button class="btn-ac" onclick="clearAll()">AC</button>
+            <button class="btn-op" onclick="append('%')">%</button>
+            <button class="btn-op" onclick="backspace()">⌫</button>
+            <button class="btn-op" onclick="append('/')">÷</button>
+
+            <button onclick="append('7')">7</button>
+            <button onclick="append('8')">8</button>
+            <button onclick="append('9')">9</button>
+            <button class="btn-op" onclick="append('*')">×</button>
+
+            <button onclick="append('4')">4</button>
+            <button onclick="append('5')">5</button>
+            <button onclick="append('6')">6</button>
+            <button class="btn-op" onclick="append('-')">−</button>
+
+            <button onclick="append('1')">1</button>
+            <button onclick="append('2')">2</button>
+            <button onclick="append('3')">3</button>
+            <button class="btn-op" onclick="append('+')">+</button>
+
+            <button onclick="append('0')">0</button>
+            <button onclick="append('.')">.</button>
+            <button class="btn-eq" onclick="calculate()">=</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const clickSound = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+
+        function toggleTheme() { document.body.classList.toggle('light-mode'); }
+
+        function append(val) {
+            clickSound.currentTime = 0; clickSound.play();
+            if (display.value === "0" || display.value === "Error") display.value = val;
+            else display.value += val;
+            display.scrollLeft = display.scrollWidth;
+        }
+
+        function clearAll() { display.value = "0"; }
+        function backspace() { display.value = display.value.slice(0, -1) || "0"; }
+
+        function speak(text) {
+            const speech = new SpeechSynthesisUtterance("Result is " + text);
+            speech.rate = 1; speech.pitch = 1.1;
+            window.speechSynthesis.speak(speech);
+        }
+
+        function calculate() {
+            try {
+                let expression = display.value.replace(/×/g, '*').replace(/÷/g, '/');
+                // Boro calculation support
+                let result = Function('"use strict"; return (' + expression + ')')();
+
+                if (!isFinite(result)) {
+                    display.value = "Infinity";
+                    speak("Infinity");
+                } else {
+                    let finalRes = Number.isInteger(result) ? result : parseFloat(result.toFixed(10));
+                    display.value = finalRes;
+                    speak(finalRes);
+                }
+            } catch {
+                display.value = "Error";
+                speak("Error");
+                setTimeout(clearAll, 1500);
+            }
+        }
+
+        // Keyboard Support
+        document.addEventListener('keydown', (e) => {
+            const valid = "0123456789.+-*/%";
+            if (valid.includes(e.key)) append(e.key === '*' ? '×' : e.key === '/' ? '÷' : e.key);
+            if (e.key === 'Enter') calculate();
+            if (e.key === 'Backspace') backspace();
+            if (e.key === 'Escape') clearAll();
+        });
+    </script>
+</body>
+</html>
